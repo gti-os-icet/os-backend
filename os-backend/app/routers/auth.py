@@ -1,21 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.config import get_db
 from app.models import Gerencia, Servidor
-from app.schemas import LoginDto, TokenResponse, UserResponse
+from app.schemas import TokenResponse, UserResponse
 from app.auth import verify_password, create_access_token
 
-# ESTA LINHA ESTAVA FALTANDO OU INCORRETA:
 router = APIRouter()
 
 @router.post("/login", response_model=TokenResponse)
-def login(login_data: LoginDto, db: Session = Depends(get_db)):
+def login(
+    login_data: OAuth2PasswordRequestForm = Depends(), # Captura os dados no padrão do Swagger/OAuth2
+    db: Session = Depends(get_db)
+):
     """Rota para autenticar usuários (Gerência ou Servidor) e emitir Token JWT."""
-    user = db.query(Gerencia).filter(Gerencia.email == login_data.email).first()
+    
+    # login_data.username conterá o e-mail inserido no formulário
+    user = db.query(Gerencia).filter(Gerencia.email == login_data.username).first()
     role = "GTI_Staff"
     
     if not user:
-        user = db.query(Servidor).filter(Servidor.email == login_data.email).first()
+        user = db.query(Servidor).filter(Servidor.email == login_data.username).first()
         role = "Servidor"
         
     if not user or not verify_password(login_data.password, user.password if hasattr(user, 'password') else "senha_mock_invalida"):
