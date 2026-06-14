@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # Container do seu Backend Python / FastAPI
+  backend:
+    build: .  # Significa: procure o Dockerfile aqui mesmo na pasta atual
+    container_name: os_backend_container
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  # Sincroniza o código local com o container
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Container do Frontend do Alexandre usando Nginx
+  frontend:
+    build: ../os-frontend  # Volta uma pasta e entra no repositório do front para achar o Dockerfile de lá!
+    container_name: os_frontend_container
+    ports:
+      - "5600:80"  # Mapeia a porta 80 do Nginx interno para a 5600 que vocês usam no navegador
+    depends_on:
+      - backend  # Garante que o front só ligue depois que o seu backend estiver de pé
